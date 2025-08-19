@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.RenderGraphModule;
+using System;
+using UnityEngine.Rendering.RenderGraphModule.Util;
+using UnityEngine.Experimental.Rendering;
 
 public class AtmosphereRenderFeature : ScriptableRendererFeature
 {
@@ -24,6 +28,7 @@ public class AtmosphereRenderFeature : ScriptableRendererFeature
         // When empty this render pass will render to the active camera render target.
         // You should never call CommandBuffer.SetRenderTarget. Instead call <c>ConfigureTarget</c> and <c>ConfigureClear</c>.
         // The render pipeline will ensure target setup and clearing happens in a performant manner.
+        [Obsolete]
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             m_skyViewLut = RenderTexture.GetTemporary(256, 128, 0, RenderTextureFormat.ARGBFloat);
@@ -36,6 +41,7 @@ public class AtmosphereRenderFeature : ScriptableRendererFeature
         // Use <c>ScriptableRenderContext</c> to issue drawing commands or execute command buffers
         // https://docs.unity3d.com/ScriptReference/Rendering.ScriptableRenderContext.html
         // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
+        [Obsolete]
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             CommandBuffer cmd = CommandBufferPool.Get();
@@ -97,8 +103,71 @@ public class AtmosphereRenderFeature : ScriptableRendererFeature
             }
         }
 
-        // Cleanup any allocated resources that were created during the execution of this render pass.
-        public override void OnCameraCleanup(CommandBuffer cmd)
+        public override void RecordRenderGraph( RenderGraph renderGraph, ContextContainer frameData )
+        {
+            // Pseudocode plan:z
+            // 1. Import all LUTs as textures into the RenderGraph.
+            // 2. Add blit passes for each LUT using their respective materials.
+            // 3. Set up pass data if needed for each pass.
+            // 4. No need to use src/dst for LUT generation, just blit to imported handles.
+            TextureHandle nullTH = TextureHandle.nullHandle;
+
+            RTHandle transmittanceLutHandle = ( m_transmittanceLut != nullTH ) ? RTHandles.Alloc( m_transmittanceLut ) : nullTH;
+            RTHandle multiScatteringLutHandle = ( m_multiScatteringLut != nullTH ) ? RTHandles.Alloc( m_multiScatteringLut ) : nullTH;
+            RTHandle skyViewLutHandle = ( m_skyViewLut != nullTH ) ? RTHandles.Alloc( m_skyViewLut ) : nullTH;
+            RTHandle aerialPerspectiveLutHandle = ( m_aerialPerspectiveLut != nullTH ) ? RTHandles.Alloc( m_aerialPerspectiveLut ) : nullTH;
+
+			if( transmittanceLutHandle != null )
+			{
+			    RenderGraphUtils.BlitMaterialParameters transmittanceLutMaterialParams = new RenderGraphUtils.BlitMaterialParameters
+                {
+                    source = TextureHandle.nullHandle,
+                    destination = renderGraph.ImportTexture( transmittanceLutHandle ),
+                    material = transmittanceLutMaterial
+                };
+                renderGraph.AddBlitPass( transmittanceLutMaterialParams );
+                transmittanceLutHandle.Release( );
+            }
+
+            if( multiScatteringLutHandle != null )
+            {
+                RenderGraphUtils.BlitMaterialParameters multiScatteringLutMaterialParams = new RenderGraphUtils.BlitMaterialParameters
+                {
+                    source = TextureHandle.nullHandle,
+                    destination = renderGraph.ImportTexture( multiScatteringLutHandle ),
+                    material = multiScatteringLutMaterial
+                };
+                renderGraph.AddBlitPass( multiScatteringLutMaterialParams );
+                multiScatteringLutHandle.Release( );
+            }
+
+            if( skyViewLutHandle != null )
+            {
+                RenderGraphUtils.BlitMaterialParameters skyViewLutMaterialParams = new RenderGraphUtils.BlitMaterialParameters
+                {
+                    source = TextureHandle.nullHandle,
+                    destination = renderGraph.ImportTexture( skyViewLutHandle ),
+                    material = skyViewLutMaterial
+                };
+                renderGraph.AddBlitPass( skyViewLutMaterialParams );
+                skyViewLutHandle.Release( );
+            }
+
+            if( aerialPerspectiveLutHandle != null )
+            {
+                RenderGraphUtils.BlitMaterialParameters aerialPerspectiveLutMaterialParams = new RenderGraphUtils.BlitMaterialParameters
+                {
+                    source = TextureHandle.nullHandle,
+                    destination = renderGraph.ImportTexture( aerialPerspectiveLutHandle ),
+                    material = aerialPerspectiveLutMaterial
+                };
+                renderGraph.AddBlitPass( aerialPerspectiveLutMaterialParams );
+                aerialPerspectiveLutHandle.Release( );
+            }
+		}
+
+		// Cleanup any allocated resources that were created during the execution of this render pass.
+		public override void OnCameraCleanup(CommandBuffer cmd)
         {
             RenderTexture.ReleaseTemporary(m_skyViewLut);
             RenderTexture.ReleaseTemporary(m_transmittanceLut);

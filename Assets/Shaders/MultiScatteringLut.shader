@@ -41,7 +41,7 @@ Shader "CasualAtmosphere/MultiScatteringLut"
                 return o;
             }
 
-            SAMPLER(sampler_LinearClamp);
+            SAMPLER(sampler_multiscatteringLutLinearClamp);
             Texture2D _transmittanceLut;
 
             float4 frag (v2f i) : SV_Target

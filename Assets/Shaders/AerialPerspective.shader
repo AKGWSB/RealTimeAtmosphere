@@ -43,7 +43,7 @@ Shader "CasualAtmosphere/AerialPerspective"
             }
 
             SAMPLER(my_point_clamp_sampler);
-            SAMPLER(sampler_LinearClamp);
+            SAMPLER(sampler_aerialLinearClamp);
             Texture2D _MainTex;
             Texture2D _aerialPerspectiveLut;
             Texture2D _transmittanceLut;
@@ -67,7 +67,7 @@ Shader "CasualAtmosphere/AerialPerspective"
             float4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;
-                float3 sceneColor = _MainTex.SampleLevel(sampler_LinearClamp, uv, 0).rgb;
+                float3 sceneColor = _MainTex.SampleLevel(sampler_aerialLinearClamp, uv, 0).rgb;
 
                 // 天空 mask
                 float sceneRawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, my_point_clamp_sampler, uv);
@@ -94,14 +94,14 @@ Shader "CasualAtmosphere/AerialPerspective"
                 //return float4(lerpFactor, 0, 0, 1);
                 
                 uv.x /= _AerialPerspectiveVoxelSize.x;
-                //return _aerialPerspectiveLut.SampleLevel(sampler_LinearClamp, float2(uv.x + 31.0 / _AerialPerspectiveVoxelSize.z, uv.y), 0);
+                //return _aerialPerspectiveLut.SampleLevel(sampler_aerialLinearClamp, float2(uv.x + 31.0 / _AerialPerspectiveVoxelSize.z, uv.y), 0);
 
                 // 采样 AerialPerspectiveVoxel
                 float2 uv1 = float2(uv.x + slice / _AerialPerspectiveVoxelSize.z, uv.y);
                 float2 uv2 = float2(uv.x + nextSlice / _AerialPerspectiveVoxelSize.z, uv.y);
 
-                float4 data1 = _aerialPerspectiveLut.SampleLevel(sampler_LinearClamp, uv1, 0);
-                float4 data2 = _aerialPerspectiveLut.SampleLevel(sampler_LinearClamp, uv2, 0);
+                float4 data1 = _aerialPerspectiveLut.SampleLevel(sampler_aerialLinearClamp, uv1, 0);
+                float4 data2 = _aerialPerspectiveLut.SampleLevel(sampler_aerialLinearClamp, uv2, 0);
                 float4 data = lerp(data1, data2, lerpFactor);
 
                 float3 inScattering = data.xyz;

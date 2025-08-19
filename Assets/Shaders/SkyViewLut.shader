@@ -41,7 +41,7 @@ Shader "CasualAtmosphere/SkyViewLut"
                 return o;
             }
 
-            SAMPLER(sampler_LinearClamp);
+            SAMPLER(sampler_skyViewLinearClamp);
             Texture2D _transmittanceLut;
             Texture2D _multiScatteringLut;
 
