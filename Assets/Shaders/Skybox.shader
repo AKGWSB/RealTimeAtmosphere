@@ -41,7 +41,7 @@ Shader "CasualAtmosphere/Skybox"
                 return o;
             }
 
-            SAMPLER(sampler_LinearClamp);
+            SAMPLER(sampler_skyboxLinearClamp);
             Texture2D _skyViewLut;
             Texture2D _transmittanceLut;
             Texture2D _SourceHdrTexture;

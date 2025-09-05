@@ -45,7 +45,7 @@ Shader "CasualAtmosphere/AerialPerspectiveLut"
             float _AerialPerspectiveDistance;
             float4 _AerialPerspectiveVoxelSize;
 
-            SAMPLER(sampler_LinearClamp);
+            SAMPLER(sampler_aerialLutLinearClamp);
             Texture2D _transmittanceLut;
             Texture2D _multiScatteringLut;
 
@@ -79,13 +79,13 @@ Shader "CasualAtmosphere/AerialPerspectiveLut"
                 // inScattering
                 color.rgb = GetSkyView(
                     param, eyePos, viewDir, lightDir, maxDis,
-                    _transmittanceLut, _multiScatteringLut, sampler_LinearClamp
+                    _transmittanceLut, _multiScatteringLut, sampler_aerialLutLinearClamp
                 );
 
                 // transmittance
                 float3 voxelPos = eyePos + viewDir * maxDis;
-                float3 t1 = TransmittanceToAtmosphere(param, eyePos, viewDir, _transmittanceLut, sampler_LinearClamp);
-                float3 t2 = TransmittanceToAtmosphere(param, voxelPos, viewDir, _transmittanceLut, sampler_LinearClamp);
+                float3 t1 = TransmittanceToAtmosphere(param, eyePos, viewDir, _transmittanceLut, sampler_aerialLutLinearClamp);
+                float3 t2 = TransmittanceToAtmosphere(param, voxelPos, viewDir, _transmittanceLut, sampler_aerialLutLinearClamp);
                 float3 t = t1 / t2;
                 color.a = dot(t, float3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0));
 
